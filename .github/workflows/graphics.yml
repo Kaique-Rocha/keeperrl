@@ -9,6 +9,8 @@ permissions:
 jobs:
   graphics:
     runs-on: windows-2022
+    env:
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -27,7 +29,7 @@ jobs:
                   if p.is_file(): z.write(p,p.relative_to("base_game"))
           subprocess.run([sys.executable,"graphics_work/build_graphics.py","graphics_work/atlas.png","base.zip","graphics_work/game"],check=True)
           subprocess.run([sys.executable,"graphics_work/finish.py"],check=True)
-          p=subprocess.run(["keeper.exe","--no_crash_reports","--stderr","--gen_z_levels","1_dark_mage"],cwd="graphics_work/game",capture_output=True,timeout=120)
+          p=subprocess.run([str(pathlib.Path("graphics_work/game/keeper.exe").resolve()),"--no_crash_reports","--stderr","--gen_z_levels","1_dark_mage"],cwd="graphics_work/game",capture_output=True,timeout=120)
           print(p.stdout.decode(errors="replace")); print(p.stderr.decode(errors="replace"))
           assert p.returncode == 0
       - name: Check graphical startup
