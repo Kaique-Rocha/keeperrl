@@ -39,7 +39,7 @@ def entries(s):return {p.split()[0]:p for p in re.split(r'(?m)^(?=[A-Z][A-Z0-9_]
 en=entries((game/'data_free/game_config/translations/english.txt').read_text(encoding='utf-8'));br=entries(pt.read_text(encoding='utf-8'))
 assert en.keys()<=br.keys()
 for k in en:assert sorted(re.findall(r'\{\d+\}',en[k]))==sorted(re.findall(r'\{\d+\}',br[k])),k
-(game/'options_v1_0.txt').write_text('SOUND,40\nMUSIC,12\nLANGUAGE,Portugues\n',encoding='utf-8')
+(game/'options_v1_0.txt').write_text('SOUND,40\nMUSIC,12\nLANGUAGE,2\n',encoding='utf-8')
 report={'translation_keys':len(en),'placeholder_mismatches':0,'sound_families':counts,'music_seconds':32}
 (game/'AUDIO-PTBR-VALIDACAO.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 (game/'LEIA-ME-GRAFICOS.txt').write_text('Extraia em uma pasta NOVA e execute Iniciar.bat.\nSprites proprios com 64 desenhos-base reutilizados por familias.\nEfeitos sintetizados e trilha ambiente instrumental generica incluidos.\nIdioma inicial: Portugues. Volumes ajustaveis nas Configuracoes.\nNao substitua suas configuracoes antigas; copie seus saves separadamente se desejar.\n',encoding='utf-8')
