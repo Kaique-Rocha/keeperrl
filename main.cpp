@@ -324,7 +324,7 @@ static int keeperMain(po::parser& commandLineFlags) {
     userKeysPath.erase();
     highscoresPath.erase();
   }
-  unique_ptr<MySteamInput> steamInput;
+  unique_ptr<MySteamInput> steamInput = make_unique<MySteamInput>();
   unique_ptr<SteamAchievements> steamAchievements;
   #ifdef RELEASE
     AppConfig appConfig(dataPath.file("appconfig.txt"));
