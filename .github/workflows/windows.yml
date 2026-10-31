@@ -50,6 +50,26 @@ jobs:
           cp /mingw64/bin/*.dll dist/
           printf '@echo off\r\ncd /d "%~dp0"\r\nkeeper.exe\r\n' > dist/Iniciar.bat
           git rev-parse HEAD > dist/COMMIT.txt
+      - name: Validate packaged executable and game data
+        shell: python
+        run: |
+          import subprocess, pathlib
+          root = pathlib.Path("dist").resolve()
+          logs = []
+          for args in [
+              ["--help"],
+              ["--no_crash_reports", "--stderr", "--gen_z_levels", "1_dark_mage"],
+          ]:
+              p = subprocess.run([str(root / "keeper.exe"), *args], cwd=root,
+                                 capture_output=True, text=True, errors="replace", timeout=180)
+              output = p.stdout + p.stderr
+              logs.append(str(args) + "\\n" + output)
+              print(output)
+              if p.returncode:
+                  raise RuntimeError(f"Smoke test failed: {args}: {p.returncode}")
+              if "--gen_z_levels" in args and "z-level" not in output:
+                  raise RuntimeError("Game-data validation produced no z-levels")
+          (root / "VALIDATION.txt").write_text("\\n".join(logs), encoding="utf-8")
       - uses: actions/upload-artifact@v4
         with:
           name: KeeperRL-Windows-x64
