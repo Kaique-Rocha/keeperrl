@@ -52,6 +52,9 @@ for rec in records:
 # Every literal tile name used by engine, including borders and transparent fog overlays.
 for n in ['empty','fogofwarall','fogofwarcornne','fogofwarcornnw','fogofwarcornse','fogofwarcornsw']:
  mapping[n]=-1;needed.add(n)
+# Seasonal aliases must exist in pairs: the engine swaps names by calendar date.
+for n,idx in {"standing_torch":59,"pumpkin":59,"santa_keeper1":16,"santa_keeper2":16,"santa_keeper3":16,"santa_keeper4":16,"santa_imp":18,"xmas_tree":9,"keeper1":16,"keeper2":16,"keeper3":16,"keeper4":16,"imp":18,"special_tree":8}.items():
+ mapping.setdefault(n,idx);needed.add(n)
 for n,idx in mapping.items():
  im=sprites[idx] if idx>=0 else Image.new('RGBA',(24,24))
  assert '/' not in n and '\\' not in n
