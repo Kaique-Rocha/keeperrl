@@ -58,11 +58,11 @@
 #include "scripted_ui_data.h"
 #include "version.h"
 #include "collective.h"
+#include "translations.h"
 
 #ifdef USE_STEAMWORKS
 #include "steam_ugc.h"
 #include "steam_client.h"
-#include "translations.h"
 #endif
 
 MainLoop::MainLoop(View* v, Highscores* h, FileSharing* fSharing, const DirectoryPath& paidDataPath,
