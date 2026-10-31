@@ -1,0 +1,58 @@
+name: Windows x64
+on:
+  push:
+    paths:
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make git
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-SDL2_image
+            mingw-w64-x86_64-openal
+            mingw-w64-x86_64-libvorbis
+            mingw-w64-x86_64-libtheora
+            mingw-w64-x86_64-curl
+            mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-libjpeg-turbo
+      - name: Build
+        run: |
+          set -euo pipefail
+          sed -i 's/ -fuse-ld=lld//g' Makefile-win
+          make -f Makefile-win -j2 AMD64=true RELEASE=true OPT=true PREFIX= CFLAGS="-Wall -std=c++14 -Wno-return-type -Wno-sign-compare -Wno-unused-variable -Wa,-mbig-obj -I. -Iextern $(pkg-config --cflags sdl2 SDL2_image openal libcurl) -DWINDOWS -DRELEASE -O2 -ftemplate-depth=512"
+          test -f keeper.exe
+          file keeper.exe
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp keeper.exe dist/
+          cp -r data_free data_contrib dist/
+          cp appconfig.txt COPYING.txt COPYING-MEDIA.txt LICENSE LICENSE_THEORAPLAY.txt dist/
+          cp /mingw64/bin/*.dll dist/
+          printf '@echo off\r\ncd /d "%~dp0"\r\nkeeper.exe\r\n' > dist/Iniciar.bat
+          git rev-parse HEAD > dist/COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KeeperRL-Windows-x64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
