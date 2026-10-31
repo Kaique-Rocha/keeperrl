@@ -10,6 +10,9 @@ jobs:
   build:
     runs-on: windows-2022
     timeout-minutes: 90
+    env:
+      CCACHE_DIR: D:/a/keeperrl/keeperrl/.ccache
+      CCACHE_BASEDIR: D:/a/keeperrl/keeperrl
     defaults:
       run:
         shell: msys2 {0}
@@ -23,6 +26,7 @@ jobs:
           update: true
           install: >-
             make git
+            mingw-w64-x86_64-ccache
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-pkgconf
             mingw-w64-x86_64-SDL2
@@ -33,13 +37,23 @@ jobs:
             mingw-w64-x86_64-curl
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-libjpeg-turbo
+      - uses: actions/cache/restore@v4
+        with:
+          path: .ccache
+          key: windows-x64-gcc-${{ github.run_id }}
+          restore-keys: windows-x64-gcc-
       - name: Build
         run: |
           set -euo pipefail
           sed -i 's/ -fuse-ld=lld//g' Makefile-win
-          make -f Makefile-win -j2 AMD64=true RELEASE=true OPT=true PREFIX= CFLAGS="-Wall -std=c++14 -Wno-return-type -Wno-sign-compare -Wno-unused-variable -Wa,-mbig-obj -I. -Iextern $(pkg-config --cflags sdl2 SDL2_image openal libcurl) -DWINDOWS -DRELEASE -O2 -ftemplate-depth=512"
+          make -f Makefile-win -j4 -k AMD64=true RELEASE=true OPT=true PREFIX= GCC="ccache g++" CFLAGS="-Wall -std=c++14 -Wno-return-type -Wno-sign-compare -Wno-unused-variable -Wa,-mbig-obj -I. -Iextern $(pkg-config --cflags sdl2 SDL2_image openal libcurl) -DWINDOWS -DRELEASE -O2 -ftemplate-depth=512"
           test -f keeper.exe
           file keeper.exe
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .ccache
+          key: windows-x64-gcc-${{ github.run_id }}
       - name: Package
         run: |
           set -euo pipefail
