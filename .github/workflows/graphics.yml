@@ -49,6 +49,8 @@ jobs:
           $g.CopyFromScreen($r.Location,[System.Drawing.Point]::Empty,$r.Size)
           $bmp.Save("$root/GUI-WINDOWS.png")
           $g.Dispose(); $bmp.Dispose()
+          $log = Get-Content "$root/gui-stderr.txt" -Raw
+          if ($log -match "FATAL|Sprite file not found|Error loading image") { throw "Graphics loader reported an error: $log" }
           if ($p.HasExited) { throw "GUI exited: $($p.ExitCode)" }
           Write-Output "Window title: $($p.MainWindowTitle)"
           Stop-Process -Id $p.Id
