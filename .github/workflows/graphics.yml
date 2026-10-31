@@ -1,0 +1,59 @@
+name: Graphics pack Windows
+on:
+  push:
+    paths: ['graphics_work/**', '.github/workflows/graphics.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  graphics:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: KeeperRL-Windows-x64
+          run-id: 41169320193
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: base_game
+      - run: python -m pip install Pillow
+      - name: Assemble and verify graphics
+        shell: python
+        run: |
+          import zipfile,pathlib,subprocess,sys
+          with zipfile.ZipFile("base.zip","w",zipfile.ZIP_DEFLATED) as z:
+              for p in pathlib.Path("base_game").rglob("*"):
+                  if p.is_file(): z.write(p,p.relative_to("base_game"))
+          subprocess.run([sys.executable,"graphics_work/build_graphics.py","graphics_work/atlas.png","base.zip","graphics_work/game"],check=True)
+          subprocess.run([sys.executable,"graphics_work/finish.py"],check=True)
+          p=subprocess.run(["keeper.exe","--no_crash_reports","--stderr","--gen_z_levels","1_dark_mage"],cwd="graphics_work/game",capture_output=True,timeout=120)
+          print(p.stdout.decode(errors="replace")); print(p.stderr.decode(errors="replace"))
+          assert p.returncode == 0
+      - name: Check graphical startup
+        shell: pwsh
+        run: |
+          $root = (Resolve-Path graphics_work/game).Path
+          $p = Start-Process "$root/keeper.exe" -ArgumentList "--no_crash_reports","--stderr" -WorkingDirectory $root -PassThru -RedirectStandardError "$root/gui-stderr.txt"
+          Start-Sleep -Seconds 20
+          $p.Refresh()
+          Add-Type -AssemblyName System.Windows.Forms
+          Add-Type -AssemblyName System.Drawing
+          $r=[System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp=New-Object System.Drawing.Bitmap $r.Width,$r.Height
+          $g=[System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($r.Location,[System.Drawing.Point]::Empty,$r.Size)
+          $bmp.Save("$root/GUI-WINDOWS.png")
+          $g.Dispose(); $bmp.Dispose()
+          if ($p.HasExited) { throw "GUI exited: $($p.ExitCode)" }
+          Write-Output "Window title: $($p.MainWindowTitle)"
+          Stop-Process -Id $p.Id
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: KeeperRL-Sprites-Windows
+          path: |
+            KeeperRL-Windows-x64-Sprites.zip
+            graphics_work/game/GUI-WINDOWS.png
+            graphics_work/game/gui-stderr.txt
+            graphics_work/game/SPRITES-VALIDACAO.json
