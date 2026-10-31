@@ -58,6 +58,7 @@
 #include "unlocks.h"
 #include "steam_input.h"
 #include "steam_achievements.h"
+#include "translations.h"
 
 #include "stack_printer.h"
 
@@ -65,7 +66,6 @@
 #include "steam_base.h"
 #include "steam_client.h"
 #include "steam_user.h"
-#include "translations.h"
 #endif
 
 #ifndef DATA_DIR
